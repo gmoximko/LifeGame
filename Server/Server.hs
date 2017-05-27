@@ -7,11 +7,13 @@ import qualified Data.Map as Map (Map(..), toList, empty, insert)
 import Network (withSocketsDo)
 import Network.Socket
 import Network.URI (uriPath)
-import Network.HTTP (receiveHTTP, respondHTTP, defaultUserAgent, mkHeader, Request(..), Response(..), HeaderName(..), Header(..))
+import Network.HTTP (receiveHTTP, respondHTTP, defaultUserAgent, mkHeader, hstreamToConnection, Request(..), Response(..), HeaderName(..), Header(..), RequestMethod(..))
 import qualified Network.TCP as TCP (openSocketStream, close, HandleStream(..))
 
-import Control.Concurrent (forkIO)
+import Control.Concurrent (forkIO, putMVar, takeMVar, readMVar, newEmptyMVar, MVar(..))
 import Control.Monad (forever)
+
+type Games = MVar (Map.Map String String)
 
 main :: IO ()
 main = withSocketsDo $ do 
@@ -27,49 +29,78 @@ main = withSocketsDo $ do
     (host, service) <- getNameInfo [] True True addr
     print $ (\x y -> x ++ ":" ++ y) <$> host <*> service
     
-    forever $ sockLoop sock
+    games <- newEmptyMVar
+    putMVar games Map.empty    
+
+    forever $ sockLoop games sock
     close sock
 
-sockLoop :: Socket -> IO ()
-sockLoop sock = do 
+sockLoop :: Games -> Socket -> IO ()
+sockLoop games sock = do 
     (newSock, remoteAddr) <- accept sock
     (host, service) <- getNameInfo [] True True remoteAddr
-    processHTTP newSock $ getHostPort host service
+    processHTTP games newSock $ getHostPort host service
     
-processHTTP :: Socket -> Maybe (String, Int) -> IO ()
-processHTTP sock Nothing = (print "Invalid address!") >> (close sock)
-processHTTP sock (Just (host, port)) = do
+processHTTP :: Games -> Socket -> Maybe (String, Int) -> IO ()
+processHTTP _ sock Nothing = (print "Invalid address!") >> (close sock)
+processHTTP games sock (Just (host, port)) = do
     forkIO $ do
         stream <- TCP.openSocketStream host port sock :: IO (TCP.HandleStream String)
         request <- receiveHTTP stream 
         case request of 
             (Left err) -> print err
-            (Right rq) -> processHTTPRequest rq stream
+            (Right rq) -> processHTTPRequest games (host ++ ":" ++ (show port)) rq stream
         TCP.close stream
     return ()
 
-processHTTPRequest :: Request String -> TCP.HandleStream String -> IO ()
-processHTTPRequest rq stream = (print rq) >> (respondHTTP stream $ responseGET $ (uriPath . rqURI) rq)
+processHTTPRequest :: Games -> String -> Request String -> TCP.HandleStream String -> IO ()
+processHTTPRequest games address rq stream = do
+    putStrLn $ (show rq) ++ (rqBody rq) ++ "\n\r"
+    case rqMethod rq of
+        GET -> respondGET games stream path
+        POST -> respondPOST games address stream path $ rqBody rq
+        _ -> respondHTTP stream badResponse
+    where 
+        path = (uriPath . rqURI) rq        
 
-responseGET :: String -> Response String
-responseGET path
-    | path == "/games" = Response 
-        { rspCode = (2, 0, 0)
-        , rspReason = "OK"
-        , rspHeaders = headers
-        , rspBody = foldl (\body (addr, params) -> concat [body, addr, " ", params, "\n"]) "" [] -- $ Map.toList
-        }
-    | otherwise = badResponse
+respondGET :: Games -> TCP.HandleStream String -> String -> IO ()
+respondGET games stream path
+    | path == "/games" = (readMVar games) >>= (\gamesVar -> respondHTTP stream $ successResponse gamesVar)
+    | otherwise = respondHTTP stream badResponse
+    where 
+        successResponse var = Response { rspCode = (2, 0, 0)
+                                       , rspReason = "OK"
+                                       , rspHeaders = headers $ length $ body var
+                                       , rspBody = body var
+                                       }
+        body var = foldl concatBody "" $ Map.toList $ var
+        concatBody result (addr, params) = concat [result, addr, " ", params, "\n"]
+
+respondPOST :: Games -> String -> TCP.HandleStream String -> String -> String -> IO ()
+respondPOST games address stream path body
+    | path == "/create" = (takeMVar games) 
+                          >>= (\gamesVar -> putMVar games $ Map.insert address body gamesVar) 
+                          >> (respondHTTP stream successResponse)
+    | otherwise = respondHTTP stream badResponse
+    where
+        successResponse = Response { rspCode = (2, 0, 1)
+                                   , rspReason = "Created"
+                                   , rspHeaders = headers 0
+                                   , rspBody = []
+                                   }
 
 badResponse :: Response String
 badResponse = Response { rspCode = (4, 0, 0)
                        , rspReason = "Bad Request"
-                       , rspHeaders = headers
+                       , rspHeaders = headers 0
                        , rspBody = [] 
                        }
 
-headers :: [Header]
-headers = [mkHeader HdrUserAgent defaultUserAgent]
+headers :: Int -> [Header]
+headers length = [ mkHeader HdrUserAgent defaultUserAgent
+                 , mkHeader HdrContentType "text/plain"
+                 , mkHeader HdrContentLength $ show length                  
+                 ]
 
 getPort :: [String] -> PortNumber
 getPort [] = aNY_PORT
