@@ -13,6 +13,7 @@
 #include <unordered_set>
 #include <vector>
 #include <memory>
+#include <bitset>
 #include "Geometry.h"
 
 struct Unit {
@@ -77,7 +78,7 @@ public:
     void Destroy();
     
 private:
-    void ProcessUnit(const Unit &unit, std::unordered_map<Geometry::Vector, uint32_t> &processCells);
+    void ProcessUnit(const Unit &unit, std::unordered_map<Geometry::Vector, std::bitset<32>> &processCells);
     bool IsGameStopped() const;
     bool CanInsert(const Geometry::Vector &unit) const;
 };
