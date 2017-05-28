@@ -41,6 +41,7 @@ class GameField {
     Geometry::Vector size;
     int player;
     bool exit;
+    bool playerWinsCell;
     unsigned turnTime;
     unsigned char currentPreset;
     
@@ -79,6 +80,7 @@ public:
 private:
     void ProcessUnit(const Unit &unit, std::unordered_map<Geometry::Vector, uint32_t> &processCells);
     bool IsGameStopped() const;
+    bool PlayerWonCell(int neighbours, int player);
     bool CanInsert(const Geometry::Vector &unit) const;
 };
 

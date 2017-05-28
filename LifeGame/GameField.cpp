@@ -20,6 +20,7 @@ GameField::GameField(std::shared_ptr<Presets> presets, Vector size, unsigned tur
     presets(presets),
     player(player),
     exit(false),
+    playerWinsCell(false),
     turnTime(turnTime),
     currentPreset(-1),
     size(size),
@@ -45,16 +46,18 @@ void GameField::ProcessUnits() {
     const uint32_t oneOneOne = 7;
     for (const auto &cell : processCells) {
         const uint32_t cellMask = cell.second;
+        if (cellMask == 0) continue;
         uint32_t offset = 0;
         uint32_t maxNeighbours = 0;
         uint32_t self = 0;
         for (int i = 0; i < maxPlayers; i++) {
-            uint32_t neighbours = cellMask & (oneOneOne << 4 * i);
-            neighbours >>= 4 * i;
-            if (neighbours > maxNeighbours || (neighbours == maxNeighbours && Random::NextBool())) {
+            const uint32_t shift = 4 * i;
+            uint32_t neighbours = cellMask & (oneOneOne << shift);
+            neighbours >>= shift;
+            if (neighbours > maxNeighbours || (neighbours == maxNeighbours && PlayerWonCell(neighbours, i))) {
                 maxNeighbours = neighbours;
                 offset = i;
-                self = cellMask & (1 << (4 * (i + 1) - 1));
+                self = cellMask & (static_cast<uint32_t>(1) << (4 * (i + 1) - 1));
             }
         }
         assert(offset >= 0 && offset <= 7);
@@ -66,7 +69,7 @@ void GameField::ProcessUnits() {
 }
 
 void GameField::ProcessUnit(const Unit &unit, std::unordered_map<Vector, uint32_t> &processCells) {
-    const uint32_t player = 1 << (4 * (unit.player + 1) - 1);
+    const uint32_t player = static_cast<uint32_t>(1) << (4 * (unit.player + 1) - 1);
     const uint32_t offset = 4 * unit.player;
     const uint32_t oneOneOne = 7;
     
@@ -148,6 +151,13 @@ const std::shared_ptr<std::vector<Vector>> GameField::LoadPreset(unsigned char p
 
 bool GameField::IsGameStopped() const {
     return !peer->IsGameStarted() || peer->IsPause();
+}
+
+bool GameField::PlayerWonCell(int neighbours, int player) {
+    const bool even = neighbours % 2 == 0;
+    const bool playerEven = player % 2 == 0;
+    playerWinsCell = !playerWinsCell;
+    return playerWinsCell ? even == playerEven : even != playerEven;
 }
 
 void GameField::Turn() {
