@@ -48,7 +48,7 @@ processHTTP games sock (Just (host, port)) = do
         stream <- TCP.openSocketStream host port sock :: IO (TCP.HandleStream String)
         request <- receiveHTTP stream 
         case request of 
-            (Left err) -> print err
+            (Left err) -> print "ERROR!" >> print err
             (Right rq) -> processHTTPRequest games (host ++ ":" ++ (show port)) rq stream
         TCP.close stream
     return ()
@@ -59,14 +59,14 @@ processHTTPRequest games address rq stream = do
     case rqMethod rq of
         GET -> respondGET games stream path
         POST -> respondPOST games address stream path $ rqBody rq
-        _ -> respondHTTP stream badResponse
+        _ -> badRespond stream
     where 
         path = (uriPath . rqURI) rq        
 
 respondGET :: Games -> TCP.HandleStream String -> String -> IO ()
 respondGET games stream path
     | path == "/games" = (readMVar games) >>= (\gamesVar -> respondHTTP stream $ successResponse gamesVar)
-    | otherwise = respondHTTP stream badResponse
+    | otherwise = badRespond stream
     where 
         successResponse var = Response { rspCode = (2, 0, 0)
                                        , rspReason = "OK"
@@ -81,7 +81,7 @@ respondPOST games address stream path body
     | path == "/create" = (takeMVar games) 
                           >>= (\gamesVar -> putMVar games $ Map.insert address body gamesVar) 
                           >> (respondHTTP stream successResponse)
-    | otherwise = respondHTTP stream badResponse
+    | otherwise = badRespond stream
     where
         successResponse = Response { rspCode = (2, 0, 1)
                                    , rspReason = "Created"
@@ -89,12 +89,16 @@ respondPOST games address stream path body
                                    , rspBody = []
                                    }
 
+badRespond :: TCP.HandleStream String -> IO ()
+badRespond stream = (print "Bad Request") >> (respondHTTP stream badResponse)  
+
 badResponse :: Response String
-badResponse = Response { rspCode = (4, 0, 0)
-                       , rspReason = "Bad Request"
-                       , rspHeaders = headers 0
-                       , rspBody = [] 
-                       }
+badResponse = let body = "Sorry, you are not welcome :(" in
+     Response { rspCode = (4, 0, 0)
+              , rspReason = "Bad Request"
+              , rspHeaders = headers $ length body
+              , rspBody = body
+              }
 
 headers :: Int -> [Header]
 headers length = [ mkHeader HdrUserAgent defaultUserAgent
