@@ -36,8 +36,8 @@ Window::Window() :
     unitRadiusRatio(0.3f),
     cellSizeRatioMin(0.005f),
     cellSizeRatioMax(0.1f),
-    cellSizeRatioStep(0.01f),
-    cellSizeRatio(0.05f),
+    cellSizeRatioStep(0.0f),
+    cellSizeRatio(0.005f),
     cellSize(0.0f),
     deltaTime(1000 / 30),
     window(0),
@@ -77,6 +77,7 @@ void Window::MainLoop(int &argc, char **argv, const std::string &label, Vector s
         glutTimerFunc(gameField->TurnTime(), Window::Update, 1);
     }
     RecalculateSize();
+    CreateMenu();
     glutMainLoop();
 }
 
@@ -87,7 +88,7 @@ void Window::Display() {
     instance.DrawCell();
     instance.DrawPoints();
     instance.DrawNumbers();
-    instance.DrawRect();
+//    instance.DrawRect();
     glutSwapBuffers();
 }
 
@@ -144,6 +145,41 @@ void Window::Update(int value) {
         instance.gameField->Turn();
         glutTimerFunc(instance.gameField->TurnTime(), Window::Update, 1);
         break;
+    }
+}
+
+void Window::CreateMenu() {
+    int subMenu = glutCreateMenu(Window::Menu);
+    const std::string label("Preset ");
+    for (char key = '1'; key <= '5'; key++) {
+        glutAddMenuEntry((label + key).c_str(), key);
+    }
+    glutCreateMenu(Window::Menu);
+    glutAddSubMenu("Presets", subMenu);
+    glutAddMenuEntry("Exit", 0);
+    glutMenuStatusFunc(Window::MenuStatus);
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
+}
+
+void Window::Menu(int value) {
+    Instance().MenuHandle(value);
+}
+
+void Window::MenuStatus(int status, int x, int y) {
+    std::cout << status << std::endl;
+    Window &instance = Instance();
+    
+    bool inUse = status == GLUT_MENU_IN_USE;
+    instance.cellSelected = inUse;
+    if (inUse) {
+        Vector pos(x, y);
+        if (instance.loadedUnits == nullptr) {
+            instance.rightButtonPressedPos = pos;
+            instance.mousePosition = pos;
+        }
+        instance.RightMouseHandle(pos, inUse);
+    } else {
+        instance.rightButtonPressed = false;
     }
 }
 
@@ -333,12 +369,8 @@ void Window::KeyboardHandle(unsigned char key, Vector mousePos) {
             Zoom(+cellSizeRatioStep);
             break;
         default:
-            if (key >= '0' && key <= '9') {
-                NumbersHandle(key, mousePos);
-            } else {
-                cellSelected = false;
-                loadedUnits = nullptr;
-            }
+            cellSelected = false;
+            loadedUnits = nullptr;
             break;
     }
 }
@@ -360,7 +392,7 @@ void Window::NumbersHandle(unsigned char key, Vector mousePos) {
         return;
     }
     const auto newLoadedUnits = gameField->LoadPreset(key);
-    if (cellSelected && loadedUnits != newLoadedUnits) {
+    if (loadedUnits != newLoadedUnits) {
         loadedUnits = newLoadedUnits;
     } else {
         loadedUnits = nullptr;
@@ -378,6 +410,19 @@ void Window::CameraScroll(Vector pos) {
     newOffset.x %= fieldSize.x;
     newOffset.y %= fieldSize.y;
     cellOffset = newOffset;
+}
+
+void Window::MenuHandle(int value) {
+    switch (value) {
+        case 0:
+            gameField->Destroy();
+            break;
+        default:
+            if (value > '0' && value <= '5') {
+                NumbersHandle(value, mousePosition);
+            }
+            break;
+    }
 }
 
 Vector Window::ScreenToCell(int x, int y) const {

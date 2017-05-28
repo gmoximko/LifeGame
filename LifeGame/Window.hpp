@@ -63,6 +63,9 @@ private:
     static void MotionFunc(int x, int y);
     static void PassiveMotionFunc(int x, int y);
     static void Update(int value);
+    static void CreateMenu();
+    static void Menu(int value);
+    static void MenuStatus(int status, int x, int y);
     
     void DrawGrid();
     void DrawPoints();
@@ -80,6 +83,7 @@ private:
     void SpecialHandle(int key, Geometry::Vector mousePos);
     void NumbersHandle(unsigned char key, Geometry::Vector mousePos);
     void CameraScroll(Geometry::Vector pos);
+    void MenuHandle(int value);
     Geometry::Vector ScreenToCell(int x, int y) const;
     Geometry::Vector ScreenToCell(Geometry::Vector vec) const;
     Geometry::Vector CellToScreen(int x, int y) const;

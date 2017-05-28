@@ -2,8 +2,6 @@
 
 import System.Environment (getArgs)
 
-import qualified Data.Map as Map (Map(..), toList, empty, insert)
-
 import Network (withSocketsDo)
 import Network.Socket
 import Network.URI (uriPath)
@@ -13,7 +11,7 @@ import qualified Network.TCP as TCP (openSocketStream, close, HandleStream(..))
 import Control.Concurrent (forkIO, putMVar, takeMVar, readMVar, newEmptyMVar, MVar(..))
 import Control.Monad (forever)
 
-type Games = MVar (Map.Map String String)
+type Games = MVar ([String])
 
 main :: IO ()
 main = withSocketsDo $ do 
@@ -30,7 +28,7 @@ main = withSocketsDo $ do
     print $ (\x y -> x ++ ":" ++ y) <$> host <*> service
     
     games <- newEmptyMVar
-    putMVar games Map.empty    
+    putMVar games []    
 
     forever $ sockLoop games sock
     close sock
@@ -49,7 +47,7 @@ processHTTP games sock (Just (host, port)) = do
         request <- receiveHTTP stream 
         case request of 
             (Left err) -> print "ERROR!" >> print err
-            (Right rq) -> processHTTPRequest games (host ++ ":" ++ (show port)) rq stream
+            (Right rq) -> processHTTPRequest games host rq stream
         TCP.close stream
     return ()
 
@@ -73,13 +71,13 @@ respondGET games stream path
                                        , rspHeaders = headers $ length $ body var
                                        , rspBody = body var
                                        }
-        body var = foldl concatBody "" $ Map.toList $ var
-        concatBody result (addr, params) = concat [result, addr, " ", params, "\n"]
+        body = foldl concatBody ""
+        concatBody result item = concat [result, item, "\n"]
 
 respondPOST :: Games -> String -> TCP.HandleStream String -> String -> String -> IO ()
 respondPOST games address stream path body
     | path == "/create" = (takeMVar games) 
-                          >>= (\gamesVar -> putMVar games $ Map.insert address body gamesVar) 
+                          >>= (\gamesVar -> putMVar games $ (concat ["server ", address, ":", body]) : gamesVar) 
                           >> (respondHTTP stream successResponse)
     | otherwise = badRespond stream
     where
