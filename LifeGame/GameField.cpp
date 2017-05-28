@@ -32,9 +32,8 @@ void GameField::ClampVector(Vector &vec) const {
     if (vec.y < 0) vec.y = size.y + vec.y;
 }
 
-const std::bitset<32> oneOneOne(7);
 void GameField::ProcessUnits() {
-    std::unordered_map<Vector, std::bitset<32>> processCells;
+    std::unordered_map<Vector, uint32_t> processCells;
     processCells.reserve(units->size() * 9);
     const size_t bucketCount = processCells.bucket_count();
     for (const auto &unit : *units) {
@@ -43,22 +42,19 @@ void GameField::ProcessUnits() {
     assert(bucketCount == processCells.bucket_count());
     
     units->clear();
+    const uint32_t oneOneOne = 7;
     for (const auto &cell : processCells) {
-        const std::bitset<32> cellMask = cell.second;
-        if (cellMask.none()) continue;
+        const uint32_t cellMask = cell.second;
         uint32_t offset = 0;
         uint32_t maxNeighbours = 0;
         uint32_t self = 0;
         for (int i = 0; i < maxPlayers; i++) {
-            const uint32_t shift = 4 * i;
-            std::bitset<32> neighboursBit = cellMask & (oneOneOne << shift);
-            neighboursBit >>= shift;
-            uint32_t neighbours = static_cast<uint32_t>(neighboursBit.to_ulong());
-            assert((neighboursBit >> 32).none());
+            uint32_t neighbours = cellMask & (oneOneOne << 4 * i);
+            neighbours >>= 4 * i;
             if (neighbours > maxNeighbours || (neighbours == maxNeighbours && Random::NextBool())) {
                 maxNeighbours = neighbours;
                 offset = i;
-                self = cellMask[4 * (i + 1) - 1];
+                self = cellMask & (1 << (4 * (i + 1) - 1));
             }
         }
         assert(offset >= 0 && offset <= 7);
@@ -69,9 +65,10 @@ void GameField::ProcessUnits() {
     }
 }
 
-void GameField::ProcessUnit(const Unit &unit, std::unordered_map<Vector, std::bitset<32>> &processCells) {
-    const uint32_t player = 4 * (unit.player + 1) - 1;
+void GameField::ProcessUnit(const Unit &unit, std::unordered_map<Vector, uint32_t> &processCells) {
+    const uint32_t player = 1 << (4 * (unit.player + 1) - 1);
     const uint32_t offset = 4 * unit.player;
+    const uint32_t oneOneOne = 7;
     
     for (int x = -1; x <= 1; x++) {
         for (int y = -1; y <= 1; y++) {
@@ -79,14 +76,14 @@ void GameField::ProcessUnit(const Unit &unit, std::unordered_map<Vector, std::bi
             ClampVector(pos);
             auto insertion = processCells.emplace(pos, 0);
             
-            std::bitset<32> &cell = insertion.first->second;
             if (x == 0 && y == 0) {
-                cell[player] = true;
+                insertion.first->second |= player;
             } else {
-                std::bitset<32> neighbours = cell & (oneOneOne << offset);
+                uint32_t &cell = insertion.first->second;
+                uint32_t neighbours = cell & (oneOneOne << offset);
                 neighbours >>= offset;
-                neighbours = std::bitset<32>(neighbours.to_ulong() + 1) & oneOneOne;
-                assert(neighbours.to_ulong() >= 0 && neighbours.to_ulong() <= 7);
+                neighbours = (neighbours + 1) & oneOneOne;
+                assert(neighbours >= 0 && neighbours <= 7);
                 cell &= ~(oneOneOne << offset);
                 cell |= neighbours << offset;
             }
