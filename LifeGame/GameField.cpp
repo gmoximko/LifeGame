@@ -50,16 +50,21 @@ void GameField::ProcessUnits() {
         uint32_t offset = 0;
         uint32_t maxNeighbours = 0;
         uint32_t self = 0;
+        bool occupy = false;
         for (int i = 0; i < maxPlayers; i++) {
             const uint32_t shift = 4 * i;
             uint32_t neighbours = cellMask & (oneOneOne << shift);
             neighbours >>= shift;
-            if (neighbours > maxNeighbours || (neighbours == maxNeighbours && PlayerWonCell(neighbours, i))) {
+            if (neighbours > maxNeighbours) {
+                occupy = true;
                 maxNeighbours = neighbours;
                 offset = i;
                 self = cellMask & (static_cast<uint32_t>(1) << (4 * (i + 1) - 1));
+            } else if (neighbours == maxNeighbours) {
+                occupy = false;
             }
         }
+        if (!occupy) continue;
         assert(offset >= 0 && offset <= 7);
         assert(maxNeighbours >= 0 && maxNeighbours <= 7);
         if (maxNeighbours == 3 || (maxNeighbours == 2 && self != 0)) {
