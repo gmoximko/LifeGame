@@ -46,8 +46,8 @@ class GameField {
     unsigned char currentPreset;
     
 public:
-    explicit GameField(std::shared_ptr<class Presets> presets);
-    explicit GameField(std::shared_ptr<class Presets> presets, Geometry::Vector size, unsigned turnTime, int player);
+    explicit GameField(const std::string &presetsPath);
+    explicit GameField(const std::string &presetsPath, Geometry::Vector size, unsigned turnTime, int player);
     
     static const int maxPlayers = 8;
     

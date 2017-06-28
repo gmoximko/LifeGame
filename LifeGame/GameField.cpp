@@ -14,10 +14,10 @@
 
 using namespace Geometry;
 
-GameField::GameField(std::shared_ptr<Presets> presets) : GameField(presets, Vector(), 0, -1) {}
+GameField::GameField(const std::string &presetsPath) : GameField(presetsPath, Vector(), 0, -1) {}
 
-GameField::GameField(std::shared_ptr<Presets> presets, Vector size, unsigned turnTime, int player) :
-    presets(presets),
+GameField::GameField(const std::string &presetsPath, Vector size, unsigned turnTime, int player) :
+    presets(new Presets(presetsPath)),
     player(player),
     exit(false),
     playerWinsCell(false),

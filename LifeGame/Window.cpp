@@ -149,14 +149,19 @@ void Window::Update(int value) {
 }
 
 void Window::CreateMenu() {
-    int subMenu = glutCreateMenu(Window::Menu);
+    int presetsMenu = glutCreateMenu(Window::Menu);
     const std::string label("Preset ");
-    for (char key = '1'; key <= '5'; key++) {
+    for (char key = '1'; key <= '9'; key++) {
         glutAddMenuEntry((label + key).c_str(), key);
     }
+    
+    int exitMenu = glutCreateMenu(Window::Menu);
+    glutAddMenuEntry("No", std::numeric_limits<int>::max());
+    glutAddMenuEntry("Yes", 0);
+    
     glutCreateMenu(Window::Menu);
-    glutAddSubMenu("Presets", subMenu);
-    glutAddMenuEntry("Exit", 0);
+    glutAddSubMenu("Presets", presetsMenu);
+    glutAddSubMenu("Exit", exitMenu);
     glutMenuStatusFunc(Window::MenuStatus);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
@@ -166,7 +171,6 @@ void Window::Menu(int value) {
 }
 
 void Window::MenuStatus(int status, int x, int y) {
-    std::cout << status << std::endl;
     Window &instance = Instance();
     
     bool inUse = status == GLUT_MENU_IN_USE;
@@ -418,7 +422,7 @@ void Window::MenuHandle(int value) {
             gameField->Destroy();
             break;
         default:
-            if (value > '0' && value <= '5') {
+            if (value > '0' && value <= '9') {
                 NumbersHandle(value, mousePosition);
             }
             break;

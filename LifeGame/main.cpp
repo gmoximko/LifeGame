@@ -11,7 +11,6 @@
 #include <sstream>
 #include <iostream>
 #include "Window.hpp"
-#include "Presets.hpp"
 #include "GameField.hpp"
 #include "Peer.hpp"
 
@@ -36,14 +35,13 @@ int main(int argc, char **argv) {
     Parse(argc, argv);
     std::shared_ptr<Peer> peer;
     std::shared_ptr<GameField> gameField;
-    std::shared_ptr<Presets> presets = std::make_shared<Presets>(args.presetPath);
 	
     if (args.master) {
-        gameField = std::make_shared<GameField>(presets, args.field, args.turnTime, 0);
+        gameField = std::make_shared<GameField>(args.presetPath, args.field, args.turnTime, 0);
         peer = std::make_shared<Peer>(gameField, args.players);
         args.address = peer->Address();
     } else {
-        gameField = std::make_shared<GameField>(presets);
+        gameField = std::make_shared<GameField>(args.presetPath);
         peer = std::make_shared<Peer>(gameField, args.address);
     }
     peer->Init();
