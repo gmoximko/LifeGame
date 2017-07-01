@@ -18,15 +18,12 @@ struct {
     Geometry::Vector field = Geometry::Vector(1000, 1000);
     Geometry::Vector window = Geometry::Vector(800, 600);
 	std::string address;
-#if defined(_WIN32)
-	std::string presetPath = "../../presets.txt";
-#else
-    std::string presetPath = "presets.txt";
-#endif
+    std::string presetPath = "rle";
     std::string label = "LifeGame";
     bool master = true;
     unsigned turnTime = 100;
     int players = 1;
+    int distanceToEnemy = 4;
 } args;
 
 void Parse(int argc, char **argv);
@@ -37,7 +34,7 @@ int main(int argc, char **argv) {
     std::shared_ptr<GameField> gameField;
 	
     if (args.master) {
-        gameField = std::make_shared<GameField>(args.presetPath, args.field, args.turnTime, 0);
+        gameField = std::make_shared<GameField>(args.presetPath, args.field, args.turnTime, 0, args.distanceToEnemy);
         peer = std::make_shared<Peer>(gameField, args.players);
         args.address = peer->Address();
     } else {
@@ -55,12 +52,12 @@ int main(int argc, char **argv) {
 void Parse(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
         if (std::strcmp("field", argv[i]) == 0) {
-            args.field.x = atoi(argv[++i]);
-            args.field.y = atoi(argv[++i]);
+            args.field.x = std::atoi(argv[++i]);
+            args.field.y = std::atoi(argv[++i]);
         }
         if (std::strcmp("window", argv[i]) == 0) {
-            args.window.x = atoi(argv[++i]);
-            args.window.y = atoi(argv[++i]);
+            args.window.x = std::atoi(argv[++i]);
+            args.window.y = std::atoi(argv[++i]);
         }
         if (std::strcmp("server", argv[i]) == 0) {
 			args.address = std::string(argv[++i]);
@@ -70,20 +67,23 @@ void Parse(int argc, char **argv) {
             args.presetPath = argv[++i];
         }
         if (std::strcmp("turn", argv[i]) == 0) {
-            unsigned turnTime = atoi(argv[++i]);
+            unsigned turnTime = std::atoi(argv[++i]);
             if (turnTime > 10) {
                 turnTime = 10;
             }
             args.turnTime = turnTime > 0 ? 1000 / turnTime : 0;
         }
         if (std::strcmp("players", argv[i]) == 0) {
-            int players = atoi(argv[++i]);
+            int players = std::atoi(argv[++i]);
             if (players > 0) {
                 if (players > GameField::maxPlayers) {
                     players = GameField::maxPlayers;
                 }
                 args.players = players;
             }
+        }
+        if (std::strcmp("distanceToEnemy", argv[i]) == 0) {
+            args.distanceToEnemy = std::atoi(argv[++i]);
         }
     }
 }

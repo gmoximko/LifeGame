@@ -15,18 +15,20 @@
 #include <memory>
 #include "Geometry.h"
 
-class Presets {
-    typedef std::vector<Geometry::Vector> Vectors;
-    typedef std::shared_ptr<Vectors> VectorsPtr;
-    
-    std::unordered_map<unsigned char, VectorsPtr> presets;
-    const std::string path;
-    
-public:
-    explicit Presets(const std::string &path);
-    void SaveOnDisk();
-    void Save(unsigned char preset, const VectorsPtr units);
-    const VectorsPtr Load(unsigned char preset) const;
-};
+namespace Resources {
 
+    class Presets {
+        std::vector<std::unique_ptr<class Pattern>> patterns;
+        
+    public:
+        explicit Presets(const std::string &path);
+        ~Presets();
+        
+        std::size_t Count() const { return patterns.size(); }
+        const std::string &GetName(std::size_t index) const;
+        const std::vector<Geometry::Vector> &GetUnits(std::size_t index) const;
+        std::size_t GetSize(std::size_t index) const;
+    };
+
+}
 #endif /* Presets_hpp */

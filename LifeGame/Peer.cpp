@@ -84,7 +84,7 @@ void Peer::AddUnit(const Vector vector) {
     addedUnits.push_back(vector);
 }
 
-void Peer::AddPreset(const Geometry::Matrix3x3 &matrix, unsigned char preset) {
+void Peer::AddPreset(const Geometry::Matrix3x3 &matrix, int preset) {
     CommandPtr command = std::make_shared<AddPresetCommand>(matrix, preset, gameField->Player());
     commands.push_back(command);
 }
@@ -350,13 +350,14 @@ void Peer::NewPlayerMessage::WriteAddress(OutputMemoryStream &stream, const std:
 }
 
 void Peer::AcceptPlayerMessage::OnRead(Peer *peer, const ConnectionPtr connection) {
-    int32_t playersCount, x, y, id, masterId;
+    int32_t playersCount, x, y, id, masterId, distance;
     uint32_t turnTime, seed;
-    connection->input >> playersCount >> x >> y >> id >> masterId >> turnTime >> seed;
+    connection->input >> playersCount >> x >> y >> id >> masterId >> distance >> turnTime >> seed;
     peer->playersCount = static_cast<int>(playersCount);
     
     peer->gameField->SetSize(Vector(static_cast<int>(x), static_cast<int>(y)));
     peer->gameField->SetPlayer(static_cast<int>(id));
+    peer->gameField->SetDistanceToEnemy(static_cast<int>(distance));
     peer->gameField->SetTurnTime(static_cast<unsigned>(turnTime));
     peer->AddPlayer(static_cast<int>(masterId), connection);
     peer->CheckReadyForGame();
@@ -371,6 +372,7 @@ void Peer::AcceptPlayerMessage::OnWrite(Peer *peer, const ConnectionPtr connecti
     << static_cast<int32_t>(peer->gameField->GetSize().y)
     << static_cast<int32_t>(peer->players.size())
     << static_cast<int32_t>(peer->gameField->Player())
+    << static_cast<int32_t>(peer->gameField->DistanceToEnemy())
     << static_cast<uint32_t>(peer->gameField->TurnTime())
     << peer->seed;
 }

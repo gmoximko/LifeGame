@@ -9,6 +9,24 @@
 #ifndef Directory_hpp
 #define Directory_hpp
 
-#include <stdio.h>
+#include <string>
+#include <dirent.h>
 
+namespace Resources {
+    
+    class Directory {
+        DIR *dir;
+        const std::string name;
+        
+    public:
+        explicit Directory(const std::string &dir);
+        ~Directory();
+        
+        const std::string &Name() const { return name; }
+        std::string Read();
+        void Reset();
+    };
+
+}
+    
 #endif /* Directory_hpp */

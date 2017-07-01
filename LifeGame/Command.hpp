@@ -73,12 +73,12 @@ namespace Messaging {
 
     class AddPresetCommand : public Command {
         Geometry::Matrix3x3 trs;
-        unsigned char preset;
+        int preset;
         int id;
         
     public:
         explicit AddPresetCommand() {}
-        explicit AddPresetCommand(Geometry::Matrix3x3 trs, unsigned char preset, int id) : trs(trs), preset(preset), id(id) {}
+        explicit AddPresetCommand(Geometry::Matrix3x3 trs, int preset, int id) : trs(trs), preset(preset), id(id) {}
         virtual ~AddPresetCommand() override {}
         virtual Cmd Type() override { return Cmd::AddPreset; }
         virtual void Apply(class GameField *gameField) override;

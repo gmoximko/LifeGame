@@ -10,20 +10,20 @@
 #include <cassert>
 #include "GameField.hpp"
 #include "Peer.hpp"
-#include "Presets.hpp"
 
 using namespace Geometry;
 
-GameField::GameField(const std::string &presetsPath) : GameField(presetsPath, Vector(), 0, -1) {}
+GameField::GameField(const std::string &presetsPath) : GameField(presetsPath, Vector(), 0, -1, 0) {}
 
-GameField::GameField(const std::string &presetsPath, Vector size, unsigned turnTime, int player) :
-    presets(new Presets(presetsPath)),
+GameField::GameField(const std::string &presetsPath, Vector size, unsigned turnTime, int player, int distanceToEnemy) :
+    presets(new Resources::Presets(presetsPath)),
     player(player),
     exit(false),
     playerWinsCell(false),
     turnTime(turnTime),
     currentPreset(-1),
     size(size),
+    distanceToEnemy(distanceToEnemy),
     units(new std::unordered_set<Unit>()) {}
 
 void GameField::ClampVector(Vector &vec) const {
@@ -101,8 +101,8 @@ void GameField::ProcessUnit(const Unit &unit, std::unordered_map<Vector, uint32_
 
 void GameField::AddPreset(const Matrix3x3 &matrix) {
     if (IsGameStopped()) return;
-    const std::shared_ptr<std::vector<Vector>> loadedUnits = presets->Load(currentPreset);
-    for (const auto &unit : *loadedUnits) {
+    const std::vector<Vector> loadedUnits = presets->GetUnits(currentPreset);
+    for (const auto &unit : loadedUnits) {
         Vector vec = matrix * unit;
         ClampVector(vec);
         if (!CanInsert(vec)) return;
@@ -110,11 +110,10 @@ void GameField::AddPreset(const Matrix3x3 &matrix) {
     peer->AddPreset(matrix, currentPreset);
 }
 
-void GameField::AddPreset(const Matrix3x3 &matrix, int id, unsigned char preset) {
-    std::shared_ptr<std::vector<Vector>> loadedUnits = presets->Load(preset);
-    assert(loadedUnits != nullptr);
-    for (int i = 0; i < loadedUnits->size(); i++) {
-        Vector pos = matrix * loadedUnits->at(i);
+void GameField::AddPreset(const Matrix3x3 &matrix, int id, int preset) {
+    const std::vector<Vector> &loadedUnits = presets->GetUnits(preset);
+    for (int i = 0; i < loadedUnits.size(); i++) {
+        Vector pos = matrix * loadedUnits.at(i);
         ClampVector(pos);
         AddUnit(pos, id);
     }
@@ -145,13 +144,20 @@ bool GameField::CanInsert(const Vector &unit) const {
     return true;
 }
 
-void GameField::SavePreset(unsigned char preset, const std::shared_ptr<std::vector<Vector>> cells) {
-    presets->Save(preset, cells);
+void GameField::ConfiguratePatterns(std::vector<std::pair<std::string, std::size_t>> &patterns) const {
+    const std::size_t size = presets->Count();
+    for (std::size_t i = 0; i < size; i++) {
+        patterns.emplace_back(presets->GetName(i), presets->GetSize(i));
+    }
 }
 
-const std::shared_ptr<std::vector<Vector>> GameField::LoadPreset(unsigned char preset) {
+void GameField::SavePreset(unsigned char preset, const std::shared_ptr<std::vector<Vector>> cells) {
+    Log::Error("GameField::SavePreset deprecated!");
+}
+
+const std::vector<Vector> &GameField::LoadPreset(int preset) {
     currentPreset = preset;
-    return presets->Load(preset);
+    return presets->GetUnits(preset);
 }
 
 bool GameField::IsGameStopped() const {
@@ -178,6 +184,7 @@ void GameField::Update() {
     peer->Update();
     if (peer->Destroyed()) {
 		peer->Cleanup();
+        presets.reset();
         std::exit(EXIT_SUCCESS);
     }
 }
@@ -185,6 +192,5 @@ void GameField::Update() {
 void GameField::Destroy() {
     if (exit) return;
     exit = true;
-    presets->SaveOnDisk();
     peer->Destroy();
 }

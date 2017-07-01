@@ -9,6 +9,7 @@
 #ifndef Window_hpp
 #define Window_hpp
 
+#include <string>
 #include <memory>
 #include <vector>
 #include "Geometry.h"
@@ -43,7 +44,8 @@ class Window {
     const unsigned deltaTime;
     
     std::shared_ptr<class GameField> gameField;
-    std::shared_ptr<std::vector<Geometry::Vector>> loadedUnits;
+    const std::vector<Geometry::Vector> *loadedUnits;
+    std::vector<std::pair<std::string, std::size_t>> patterns;
     
 public:
     static Window &Instance();
@@ -81,7 +83,7 @@ private:
     void RightMouseHandle(Geometry::Vector mousePos, bool pressed);
     void KeyboardHandle(unsigned char key, Geometry::Vector mousePos);
     void SpecialHandle(int key, Geometry::Vector mousePos);
-    void NumbersHandle(unsigned char key, Geometry::Vector mousePos);
+    void NumbersHandle(int key, Geometry::Vector mousePos);
     void CameraScroll(Geometry::Vector pos);
     void MenuHandle(int value);
     Geometry::Vector ScreenToCell(int x, int y) const;

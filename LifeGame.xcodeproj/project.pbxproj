@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EC08E69C1F03E97300F1FE5A /* Directory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC08E69A1F03E97300F1FE5A /* Directory.cpp */; };
+		EC08E6A21F03F64C00F1FE5A /* Pattern.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC08E6A01F03F64C00F1FE5A /* Pattern.cpp */; };
 		EC0CB9461E059456009E443E /* GameField.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC0CB9441E059456009E443E /* GameField.cpp */; };
 		EC1C108A1E34F774004F6BC2 /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC1C10881E34F774004F6BC2 /* Utils.cpp */; };
 		EC42B8831E55EFFC0030210F /* Peer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EC42B8811E55EFFC0030210F /* Peer.cpp */; };
@@ -40,6 +42,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		EC08E69A1F03E97300F1FE5A /* Directory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Directory.cpp; sourceTree = "<group>"; };
+		EC08E69B1F03E97300F1FE5A /* Directory.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Directory.hpp; sourceTree = "<group>"; };
+		EC08E6A01F03F64C00F1FE5A /* Pattern.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Pattern.cpp; sourceTree = "<group>"; };
+		EC08E6A11F03F64C00F1FE5A /* Pattern.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Pattern.hpp; sourceTree = "<group>"; };
 		EC0CB9441E059456009E443E /* GameField.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GameField.cpp; sourceTree = "<group>"; };
 		EC0CB9451E059456009E443E /* GameField.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = GameField.hpp; sourceTree = "<group>"; };
 		EC1C10881E34F774004F6BC2 /* Utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils.cpp; sourceTree = "<group>"; };
@@ -91,6 +97,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		EC08E6991F03E95400F1FE5A /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				EC5936731E0828BA00075699 /* Presets.cpp */,
+				EC5936741E0828BA00075699 /* Presets.hpp */,
+				EC08E69A1F03E97300F1FE5A /* Directory.cpp */,
+				EC08E69B1F03E97300F1FE5A /* Directory.hpp */,
+				EC08E6A01F03F64C00F1FE5A /* Pattern.cpp */,
+				EC08E6A11F03F64C00F1FE5A /* Pattern.hpp */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
 		EC69E5F31DFB1ED500C2AF7E = {
 			isa = PBXGroup;
 			children = (
@@ -116,10 +135,9 @@
 				ECAA64221E02DB35009A1051 /* Window.hpp */,
 				EC0CB9441E059456009E443E /* GameField.cpp */,
 				EC0CB9451E059456009E443E /* GameField.hpp */,
-				EC5936731E0828BA00075699 /* Presets.cpp */,
-				EC5936741E0828BA00075699 /* Presets.hpp */,
 				EC1C10881E34F774004F6BC2 /* Utils.cpp */,
 				EC1C10891E34F774004F6BC2 /* Utils.hpp */,
+				EC08E6991F03E95400F1FE5A /* Resources */,
 				EC81246D1E0F8933002A339E /* Geometry */,
 				ECFAFB7F1E194F2D009C4962 /* Network */,
 				ECD81F321E507DB900FCBB74 /* Messaging */,
@@ -244,7 +262,9 @@
 				ECFAFB821E194F73009C4962 /* SocketAddress.cpp in Sources */,
 				ECDDBA641E2B379B00F74A73 /* SocketSelector.cpp in Sources */,
 				EC0CB9461E059456009E443E /* GameField.cpp in Sources */,
+				EC08E69C1F03E97300F1FE5A /* Directory.cpp in Sources */,
 				EC1C108A1E34F774004F6BC2 /* Utils.cpp in Sources */,
+				EC08E6A21F03F64C00F1FE5A /* Pattern.cpp in Sources */,
 				EC69E6001DFB1ED500C2AF7E /* main.cpp in Sources */,
 				ECA3CD301E1A25940034815A /* TCPSocket.cpp in Sources */,
 				ECB682201E26F828009D9C3C /* MemoryStream.cpp in Sources */,

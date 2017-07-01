@@ -150,17 +150,20 @@ void Window::Update(int value) {
 
 void Window::CreateMenu() {
     int presetsMenu = glutCreateMenu(Window::Menu);
-    const std::string label("Preset ");
-    for (char key = '1'; key <= '9'; key++) {
-        glutAddMenuEntry((label + key).c_str(), key);
+    const auto &patterns = Instance().patterns;
+    int i = 0;
+    for (const auto &pattern : patterns) {
+        const std::string label = pattern.first + " (" + std::to_string(pattern.second) + ")";
+        glutAddMenuEntry(label.c_str(), i++);
     }
     
     int exitMenu = glutCreateMenu(Window::Menu);
     glutAddMenuEntry("No", std::numeric_limits<int>::max());
-    glutAddMenuEntry("Yes", 0);
+    glutAddMenuEntry("Yes", i);
+    assert(i == patterns.size());
     
     glutCreateMenu(Window::Menu);
-    glutAddSubMenu("Presets", presetsMenu);
+    glutAddSubMenu("Patterns", presetsMenu);
     glutAddSubMenu("Exit", exitMenu);
     glutMenuStatusFunc(Window::MenuStatus);
     glutAttachMenu(GLUT_RIGHT_BUTTON);
@@ -389,13 +392,13 @@ void Window::SpecialHandle(int key, Vector mousePos) {
     }
 }
 
-void Window::NumbersHandle(unsigned char key, Vector mousePos) {
+void Window::NumbersHandle(int key, Vector mousePos) {
     const auto cells = GetSelectedCells();
     if (!cells->empty()) {
         gameField->SavePreset(key, cells);
         return;
     }
-    const auto newLoadedUnits = gameField->LoadPreset(key);
+    const auto *newLoadedUnits = &gameField->LoadPreset(key);
     if (loadedUnits != newLoadedUnits) {
         loadedUnits = newLoadedUnits;
     } else {
@@ -417,15 +420,10 @@ void Window::CameraScroll(Vector pos) {
 }
 
 void Window::MenuHandle(int value) {
-    switch (value) {
-        case 0:
-            gameField->Destroy();
-            break;
-        default:
-            if (value > '0' && value <= '9') {
-                NumbersHandle(value, mousePosition);
-            }
-            break;
+    if (value == patterns.size()) {
+        gameField->Destroy();
+    } else if (value < patterns.size()) {
+        NumbersHandle(value, mousePosition);
     }
 }
 
@@ -501,6 +499,7 @@ const std::shared_ptr<std::vector<Vector>> Window::GetSelectedCells() const {
 
 void Window::Init(std::shared_ptr<GameField> gameField) {
     this->gameField = gameField;
+    gameField->ConfiguratePatterns(patterns);
 }
 
 void Window::Refresh() const {

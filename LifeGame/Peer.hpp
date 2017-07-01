@@ -46,7 +46,7 @@ public:
     void Turn();
     void Pause();
     void AddUnit(const Geometry::Vector vector);
-    void AddPreset(const Geometry::Matrix3x3 &matrix, unsigned char preset);
+    void AddPreset(const Geometry::Matrix3x3 &matrix, int preset);
     bool IsPause() const;
     bool IsGameStarted() const { return playersCount == readyPlayers; }
     

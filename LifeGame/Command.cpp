@@ -86,10 +86,10 @@ namespace Messaging {
     }
 
     void AddPresetCommand::OnRead(Network::InputMemoryStream &stream) {
-        uint8_t preset;
+        int32_t preset;
         int32_t id;
         stream >> preset >> id;
-        this->preset = static_cast<unsigned char>(preset);
+        this->preset = static_cast<int>(preset);
         this->id = static_cast<int>(id);
         for (int i = 0; i < trs.Size() * trs.Size(); i++) {
             stream >> trs[i];
@@ -97,7 +97,7 @@ namespace Messaging {
     }
 
     void AddPresetCommand::OnWrite(Network::OutputMemoryStream &stream) {
-        stream << static_cast<uint8_t>(preset) << static_cast<int32_t>(id);
+        stream << static_cast<int32_t>(preset) << static_cast<int32_t>(id);
         for (int i = 0; i < trs.Size() * trs.Size(); i++) {
             stream << trs[i];
         }

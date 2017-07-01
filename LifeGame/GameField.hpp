@@ -9,10 +9,10 @@
 #ifndef GameField_hpp
 #define GameField_hpp
 
-#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 #include <memory>
+#include "Presets.hpp"
 #include "Geometry.h"
 
 struct Unit {
@@ -34,42 +34,45 @@ struct std::hash<Unit> {
 };
 
 class GameField {
-    static const int distanceToEnemy = 4;
     class Peer *peer;
-    std::shared_ptr<class Presets> presets;
+    std::unique_ptr<Resources::Presets> presets;
     std::shared_ptr<std::unordered_set<Unit>> units;
     Geometry::Vector size;
     int player;
+    int distanceToEnemy;
     bool exit;
     bool playerWinsCell;
     unsigned turnTime;
-    unsigned char currentPreset;
+    int currentPreset;
     
 public:
-    explicit GameField(const std::string &presetsPath);
-    explicit GameField(const std::string &presetsPath, Geometry::Vector size, unsigned turnTime, int player);
-    
     static const int maxPlayers = 8;
+    
+    explicit GameField(const std::string &presetsPath);
+    explicit GameField(const std::string &presetsPath, Geometry::Vector size, unsigned turnTime, int player, int distanceToEnemy);
     
     int Player() const { return player; }
     unsigned TurnTime() const { return turnTime; }
     Geometry::Vector GetSize() const { return size; }
+    int DistanceToEnemy() const { return distanceToEnemy; }
     bool IsInitialized() const { return player >= 0 && size.x > 0 && size.y > 0; }
     
     void SetPeer(Peer *peer) { this->peer = peer; }
     void SetTurnTime(unsigned turnTime) { this->turnTime = turnTime; }
     void SetSize(Geometry::Vector size) { this->size = size; }
     void SetPlayer(int player) { this->player = player; }
+    void SetDistanceToEnemy(int distanceToEnemy) { this->distanceToEnemy = distanceToEnemy; }
     
     const std::shared_ptr<std::unordered_set<Unit>> GetUnits() const { return units; }
     void ClampVector(Geometry::Vector &vec) const;
     void AddPreset(const Geometry::Matrix3x3 &matrix);
-    void AddPreset(const Geometry::Matrix3x3 &matrix, int id, unsigned char preset);
+    void AddPreset(const Geometry::Matrix3x3 &matrix, int id, int preset);
     void AddUnit(Geometry::Vector unit);
     bool AddUnit(Geometry::Vector unit, int id);
     
+    void ConfiguratePatterns(std::vector<std::pair<std::string, std::size_t>> &patterns) const;
     void SavePreset(unsigned char preset, const std::shared_ptr<std::vector<Geometry::Vector>> cells);
-    const std::shared_ptr<std::vector<Geometry::Vector>> LoadPreset(unsigned char preset);
+    const std::vector<Geometry::Vector> &LoadPreset(int preset);
     
     void Turn();
     void Pause();

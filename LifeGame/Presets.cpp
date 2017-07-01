@@ -10,70 +10,47 @@
 #include <cassert>
 #include <string>
 #include <iostream>
+#include <regex>
+#include "Directory.hpp"
+#include "Pattern.hpp"
 #include "Presets.hpp"
 
 using namespace Geometry;
 
-Presets::Presets(const std::string &path) : path(path) {
-    std::fstream file;
-    file.open(path, std::fstream::in | std::fstream::out);
-    std::string str;
-    while (std::getline(file, str)) {
-//        std::cout << str << std::endl;
-        size_t equal = str.find('=');
-        if (equal != 1) continue;
-        char preset = str[0];
-        size_t start = 2;
-        size_t end = str.find(' ', start);
-        auto iter = presets.insert(std::make_pair(preset, std::make_shared<Vectors>()));
+namespace Resources {
+
+    Presets::Presets(const std::string &path) {
+        std::regex regex("^([\\w\\-. ]+).rle$");
+        Directory dir(path);
         
-        while (end != std::string::npos) {
-            Vector result;
-            size_t comma = str.find(',', start);
-            if (comma == std::string::npos) continue;
-            result.x = std::stoi(str.substr(start, comma - 1));
-            result.y = std::stoi(str.substr(comma + 1, end - 1));
-            iter.first->second->push_back(result);
-            start = end + 1;
-            end = str.find(' ', start);
+        std::string name = dir.Read();
+        while (!name.empty()) {
+            std::smatch match;
+            name = dir.Read();
+            if (!std::regex_match(name, match, regex)) continue;
+            
+            std::fstream file(dir.Name() + "/" + name, std::ios::in);
+            if (!file.is_open()) continue;
+            
+            auto pattern = Pattern::FromRLE(file, name);
+            if (pattern != nullptr) {
+                patterns.emplace_back(std::move(pattern));
+            }
         }
     }
-    file.close();
-}
-
-void Presets::SaveOnDisk() {
-    std::fstream file;
-    file.open(path, std::fstream::out | std::fstream::trunc);
-    for (const auto &iter : presets) {
-        const VectorsPtr vector = iter.second;
-        if (vector->empty()) continue;
-        file << iter.first << '=';
-        for (int i = 0; i < vector->size(); i++) {
-            auto vec = vector->at(i);
-            file << std::to_string(vec.x) << ',' << std::to_string(vec.y) << ' ';
-//            std::cout << vector[i].x << " " << vector[i].y << std::endl;
-        }
-        file << '\n';
+    
+    Presets::~Presets() = default;
+    
+    const std::string & Presets::GetName(std::size_t index) const {
+        return patterns.at(index)->Name();
     }
-    file.close();
-}
 
-void Presets::Save(unsigned char preset, const VectorsPtr units) {
-    auto result = presets.find(preset);
-    VectorsPtr vector;
-    if (result == presets.end()) {
-        auto inserted = presets.insert(std::make_pair(preset, std::make_shared<Vectors>()));
-        if (!inserted.second) return;
-        vector = inserted.first->second;
-    } else {
-        vector = result->second;
-        vector->clear();
+    const std::vector<Vector> &Presets::GetUnits(std::size_t index) const {
+        return patterns.at(index)->Units();
     }
-    vector->assign(units->cbegin(), units->cend());
-}
+    
+    std::size_t Presets::GetSize(std::size_t index) const {
+        return patterns.at(index)->Size();
+    }
 
-const std::shared_ptr<std::vector<Vector>> Presets::Load(unsigned char preset) const {
-    auto result = presets.find(preset);
-    if (result == presets.end()) return nullptr;
-    return result->second;
 }
