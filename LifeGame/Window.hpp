@@ -41,6 +41,7 @@ class Window {
     const float cellSizeRatioMin;
     const float cellSizeRatioMax;
     const float cellSizeRatioStep;
+    const float cellSizeToDrawGrid;
     const unsigned deltaTime;
     
     std::shared_ptr<class GameField> gameField;

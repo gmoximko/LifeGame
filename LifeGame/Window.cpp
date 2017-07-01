@@ -34,9 +34,10 @@ Window::Window() :
     cameraMoveSensititity(1.f),
     unitAngleStep(10.0f),
     unitRadiusRatio(0.3f),
-    cellSizeRatioMin(0.005f),
-    cellSizeRatioMax(0.1f),
-    cellSizeRatioStep(0.0f),
+    cellSizeRatioMin(0.001f),
+    cellSizeRatioMax(0.03f),
+    cellSizeRatioStep(0.001f),
+    cellSizeToDrawGrid(10.0f),
     cellSizeRatio(0.005f),
     cellSize(0.0f),
     deltaTime(1000 / 30),
@@ -191,7 +192,7 @@ void Window::MenuStatus(int status, int x, int y) {
 }
 
 void Window::DrawGrid() {
-    if (cellSizeRatio <= cellSizeRatioMin) return;
+    if (cellSize <= cellSizeToDrawGrid) return;
     glColor3f(1.0f, 1.0f, 1.0f);
     glBegin(GL_LINES);
     for (float x = cellSize; x < windowSize.x; x += cellSize) {
@@ -249,10 +250,11 @@ void Window::RecalculateSize() {
     windowSize = Vector(glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT));
     const float sideRatio = windowSize.x > windowSize.y ? windowSize.y : windowSize.x;
     cellSize = sideRatio * cellSizeRatio;
+    if (cellSize < 1.0f) cellSize = 1.0f;
 }
 
 void Window::DrawNumbers() {
-    if (cellSizeRatio <= cellSizeRatioMin) return;
+    if (cellSize <= cellSizeToDrawGrid) return;
     glColor3f(1.0f, 1.0f, 1.0f);
     const float halfSize = cellSize * 0.5f;
     const Vector &fieldSize = gameField->GetSize();

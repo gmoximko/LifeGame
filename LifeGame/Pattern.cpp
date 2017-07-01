@@ -80,7 +80,7 @@ namespace Resources {
                         pos.x += digit;
                     } else /*if (std::tolower(c) == 'o')*/ {
                         for (int x = 0; x < digit; x++, pos.x++) {
-                            Vector unit(pos.x, size.y - 1 - pos.y);
+                            Vector unit(pos.x - 1, size.y - 1 - pos.y - 1);
                             units.push_back(unit - size / 2);
                         }
                     }
