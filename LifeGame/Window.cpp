@@ -190,6 +190,12 @@ void Window::MenuStatus(int status, int x, int y) {
     }
 }
 
+int Window::GetMaxTexSize() {
+    int result;
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &result);
+    return result;
+}
+
 void Window::DrawGrid() {
     if (cellSize <= cellSizeToDrawGrid) return;
     glColor3f(1.0f, 1.0f, 1.0f);
@@ -252,10 +258,8 @@ void Window::RecalculateSize() {
     if (cellSize < 1.0f) cellSize = 1.0f;
     
     const Vector fieldSize = gameField->GetSize();
-    const float width = fieldSize.x * cellSize;
-    const float height = fieldSize.y * cellSize;
-    const float minW = windowSize.x / width;
-    const float minH = windowSize.y / height;
+    const float minW = windowSize.x / static_cast<float>(fieldSize.x);
+    const float minH = windowSize.y / static_cast<float>(fieldSize.y);
     const float min = minW > minH ? minW : minH;
     if (cellSize < min) cellSize = min;
 }

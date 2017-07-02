@@ -69,6 +69,7 @@ private:
     static void CreateMenu();
     static void Menu(int value);
     static void MenuStatus(int status, int x, int y);
+    static int GetMaxTexSize();
     
     void DrawGrid();
     void DrawPoints();
