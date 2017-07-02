@@ -122,8 +122,7 @@ void Window::SpecialFunc(int key, int x, int y) {
 
 void Window::MotionFunc(int x, int y) {
     Window &instance = Instance();
-    instance.cellSelected = false;
-    instance.loadedUnits = nullptr;
+    instance.ResetLoadedUnits();
     instance.mousePosition = Vector(x, y);
     if (instance.leftButtonPressed) {
         instance.CameraScroll(Vector(x, y));
@@ -154,7 +153,7 @@ void Window::CreateMenu() {
     const auto &patterns = Instance().patterns;
     int i = 0;
     for (const auto &pattern : patterns) {
-        const std::string label = pattern.first + " (" + std::to_string(pattern.second) + ")";
+        const std::string label = *pattern.first + " (" + std::to_string(pattern.second) + ")";
         glutAddMenuEntry(label.c_str(), i++);
     }
     
@@ -251,6 +250,14 @@ void Window::RecalculateSize() {
     const float sideRatio = windowSize.x > windowSize.y ? windowSize.y : windowSize.x;
     cellSize = sideRatio * cellSizeRatio;
     if (cellSize < 1.0f) cellSize = 1.0f;
+    
+    const Vector fieldSize = gameField->GetSize();
+    const float width = fieldSize.x * cellSize;
+    const float height = fieldSize.y * cellSize;
+    const float minW = windowSize.x / width;
+    const float minH = windowSize.y / height;
+    const float min = minW > minH ? minW : minH;
+    if (cellSize < min) cellSize = min;
 }
 
 void Window::DrawNumbers() {
@@ -314,6 +321,7 @@ void Window::Zoom(float zoom) {
     if (cellSizeRatio < cellSizeRatioMin) cellSizeRatio = cellSizeRatioMin;
     if (cellSizeRatio > cellSizeRatioMax) cellSizeRatio = cellSizeRatioMax;
     RecalculateSize();
+    ResetLoadedUnits();
     const Vector newCell = GetCellUnderMouse();
     cellOffset += newCell - oldCell;
 }
@@ -324,8 +332,7 @@ void Window::LeftMouseHandle(Vector mousePos, bool pressed) {
             cameraScrolled = false;
         } else if (loadedUnits != nullptr) {
             gameField->AddPreset(loadedUnitsTRS);
-            loadedUnits = nullptr;
-            cellSelected = false;
+            ResetLoadedUnits();
         } else {
             const Vector cell = ScreenToCell(mousePos);
             gameField->AddUnit(cell);
@@ -378,8 +385,7 @@ void Window::KeyboardHandle(unsigned char key, Vector mousePos) {
             Zoom(+cellSizeRatioStep);
             break;
         default:
-            cellSelected = false;
-            loadedUnits = nullptr;
+            ResetLoadedUnits();
             break;
     }
 }
@@ -404,8 +410,7 @@ void Window::NumbersHandle(int key, Vector mousePos) {
     if (loadedUnits != newLoadedUnits) {
         loadedUnits = newLoadedUnits;
     } else {
-        loadedUnits = nullptr;
-        cellSelected = false;
+        ResetLoadedUnits();
     }
 }
 
@@ -490,6 +495,11 @@ void Window::CalulateSelectedCells() const {
         float cellY = vec[i].y / cellSize;
         vec[i] = Vector(ceilf(cellX + 0.5f), -ceilf(cellY + 0.5f));
     }
+}
+
+void Window::ResetLoadedUnits() {
+    loadedUnits = nullptr;
+    cellSelected = false;
 }
 
 const std::shared_ptr<std::vector<Vector>> Window::GetSelectedCells() const {

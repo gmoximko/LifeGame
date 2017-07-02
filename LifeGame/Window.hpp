@@ -46,7 +46,7 @@ class Window {
     
     std::shared_ptr<class GameField> gameField;
     const std::vector<Geometry::Vector> *loadedUnits;
-    std::vector<std::pair<std::string, std::size_t>> patterns;
+    std::vector<std::pair<const std::string *, std::size_t>> patterns;
     
 public:
     static Window &Instance();
@@ -92,6 +92,7 @@ private:
     Geometry::Vector CellToScreen(int x, int y) const;
     Geometry::Vector CellToScreen(Geometry::Vector vec) const;
     void CalulateSelectedCells() const;
+    void ResetLoadedUnits();
     
     explicit Window();
     ~Window();

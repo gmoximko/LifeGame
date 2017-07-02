@@ -144,10 +144,10 @@ bool GameField::CanInsert(const Vector &unit) const {
     return true;
 }
 
-void GameField::ConfiguratePatterns(std::vector<std::pair<std::string, std::size_t>> &patterns) const {
+void GameField::ConfiguratePatterns(std::vector<std::pair<const std::string *, std::size_t>> &patterns) const {
     const std::size_t size = presets->Count();
     for (std::size_t i = 0; i < size; i++) {
-        patterns.emplace_back(presets->GetName(i), presets->GetSize(i));
+        patterns.emplace_back(&presets->GetName(i), presets->GetSize(i));
     }
 }
 

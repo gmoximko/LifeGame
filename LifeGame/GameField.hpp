@@ -70,7 +70,7 @@ public:
     void AddUnit(Geometry::Vector unit);
     bool AddUnit(Geometry::Vector unit, int id);
     
-    void ConfiguratePatterns(std::vector<std::pair<std::string, std::size_t>> &patterns) const;
+    void ConfiguratePatterns(std::vector<std::pair<const std::string *, std::size_t>> &patterns) const;
     void SavePreset(unsigned char preset, const std::shared_ptr<std::vector<Geometry::Vector>> cells);
     const std::vector<Geometry::Vector> &LoadPreset(int preset);
     

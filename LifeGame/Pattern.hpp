@@ -25,7 +25,7 @@ namespace Resources {
         
         const std::string &Name() const { return name; }
         const std::vector<Geometry::Vector> &Units() const { return units; }
-        const size_t Size() const { return units.size(); }
+        const std::size_t Size() const { return units.size(); }
         
     private:
         explicit Pattern() {}
